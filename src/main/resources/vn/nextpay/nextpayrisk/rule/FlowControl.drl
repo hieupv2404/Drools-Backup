@@ -1,0 +1,38 @@
+package vn.nextpay.nextpayrisk.rule;
+
+import vn.nextpay.nrmrisk.dao.entity.VimoCalc24h;
+import vn.nextpay.nrmrisk.dao.entity.VimoCalc;
+import vn.nextpay.nrmrisk.dao.entity.VimoRiskTrans;
+
+rule "VAS" salience 1004
+activation-group "main"
+when
+    VimoRiskTrans(droolMethod == "TOPUP" || droolMethod == "BUYCARD" || droolMethod == "LOAN");
+then
+    kcontext.getKnowledgeRuntime().getAgenda().getAgendaGroup("VAS").setFocus();
+end
+
+rule "DEPOSIT" salience 1003
+activation-group "main"
+when
+    VimoRiskTrans(droolMethod == "DEPOSIT_OFFL" || droolMethod == "DEPOSIT_ONL");
+then
+    kcontext.getKnowledgeRuntime().getAgenda().getAgendaGroup("DEPOSIT").setFocus();
+end
+
+rule "WITHDRAW" salience 1002
+activation-group "main"
+when
+    VimoRiskTrans(droolMethod == "CASH_OUT_OFFL" || droolMethod == "CASH_OUT_ONL");
+then
+    kcontext.getKnowledgeRuntime().getAgenda().getAgendaGroup("WITHDRAW").setFocus();
+end
+
+rule "TRANSFER" salience 1001
+activation-group "main"
+when
+    VimoRiskTrans(droolMethod == "OUT_WALLET" || droolMethod == "IN_WALLET");
+then
+    kcontext.getKnowledgeRuntime().getAgenda().getAgendaGroup("TRANSFER").setFocus();
+end
+

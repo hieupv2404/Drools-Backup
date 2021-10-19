@@ -1,0 +1,27 @@
+package vn.nextpay.nextpayrisk.rule;
+
+import vn.nextpay.nrmrisk.dao.entity.VimoCalc24h;
+import vn.nextpay.nrmrisk.dao.entity.VimoCalc;
+import vn.nextpay.nrmrisk.dao.entity.VimoRiskTrans;
+
+import java.time.LocalDateTime;
+
+rule "outtime approve cash-out online amount grater than 1M and fist transaction in 3 month"
+ruleflow-group "WITHDRAW"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="CASH_OUT_ONL" && droolsCustomerStatus=="APPROVE" && amount>1000000 
+     && (transLocalDateTime.getHour() >=22 || transLocalDateTime.getHour() <=7) && lastTransLocalDateTime.isBefore(transLocalDateTime.minus(3, ChronoUnit.MONTHS)));
+   then
+      vimoRiskTrans.addToList("VM-WITHDRAW-ON-21001: Giao dịch lớn hơn 1M phát sinh lần đầu tiên trong vòng 3 tháng",2);
+end
+
+rule "outtime approve cash-out online draw time geater or equal 2 time in 24h"
+ruleflow-group "WITHDRAW"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="CASH_OUT_ONL" && droolsCustomerStatus=="APPROVE" && (transLocalDateTime.getHour() >=22 || transLocalDateTime.getHour() <=7));
+     vimoCalc24h: VimoCalc24h(countTrans24h >= 2);
+   then
+      vimoRiskTrans.addToList("VM-WITHDRAW-ON-21002: Rút liên tiếp các giao dịch kể từ lần thứ 2 trong vòng 24h",2);
+end

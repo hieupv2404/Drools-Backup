@@ -1,0 +1,154 @@
+package vn.nextpay.nextpayrisk.rule;
+
+import vn.nextpay.nrmrisk.dao.entity.VimoCalc24h;
+import vn.nextpay.nrmrisk.dao.entity.VimoCalc;
+import vn.nextpay.nrmrisk.dao.entity.VimoRiskTrans;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+
+
+
+rule "Recharge sequence from 5th in 24H by aprrove topup IPT"
+salience 10
+ruleflow-group "VAS"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="TOPUP" && droolsCustomerStatus=="APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+     vimoCalc24h : VimoCalc24h(countTrans24h>=5)
+   then
+      vimoRiskTrans.addToList("VM-VAS-TOUP-11001: Nạp liên tiếp các giao dịch kể từ lần thứ 5 trong vòng 24h",1);
+end
+
+
+rule "Sum Money GT 5M in 24H by aprrove topup"
+ruleflow-group "VAS"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="TOPUP" && droolsCustomerStatus=="APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+     vimoCalc24h : VimoCalc24h(amount24h>5000000 )
+   then
+      vimoRiskTrans.addToList("VM-VAS-TOUP-11002: Tổng số tiền các giao dịch lớn hơn 5M trong vòng 24h",2);
+end
+
+
+
+
+rule "Recharge sequence from 5th in 24H by aprrove code IPT"
+salience 10
+ruleflow-group "VAS"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="BUYCARD" && droolsCustomerStatus=="APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+     vimoCalc24h : VimoCalc24h(countTrans24h>=5)
+   then
+      vimoRiskTrans.addToList("VM-VAS-CARD-11001: Nạp liên tiếp các giao dịch kể từ lần thứ 5 trong vòng 24h",1);
+end
+
+
+rule "Sum Money GT 3M in 24H by aprrove buycard"
+ruleflow-group "VAS"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="BUYCARD" && droolsCustomerStatus=="APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+     vimoCalc24h : VimoCalc24h(amount24h>3000000 )
+   then
+      vimoRiskTrans.addToList("VM-VAS-CARD-11002: Tổng số tiền các giao dịch lớn hơn 3M trong vòng 24h",2);
+end
+
+
+
+rule "Recharge sequence from 3th in 24H by aprrove loan IPT"
+salience 10
+ruleflow-group "VAS"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="LOAN" && droolsCustomerStatus=="APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+     vimoCalc24h : VimoCalc24h(countTrans24h>=3)
+   then
+      vimoRiskTrans.addToList("VM-VAS-BILLING-11001: Nạp liên tiếp các giao dịch kể từ lần thứ 3 trong vòng 24h",1);
+end
+
+
+rule "Sum Money GT 10M in 24H by aprrove loans"
+ruleflow-group "VAS"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="LOAN" && droolsCustomerStatus=="APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+     vimoCalc24h : VimoCalc24h(amount24h>10000000 )
+   then
+      vimoRiskTrans.addToList("VM-VAS-BILLING-11002: Tổng số tiền các giao dịch lớn hơn 10M trong vòng 24h",2);
+end
+
+// ---------------------------------
+
+rule "Recharge sequence from 3th in 24H by not-aprrove topup IPT"
+salience 10
+ruleflow-group "VAS"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="TOPUP" && droolsCustomerStatus=="NOT_APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+     vimoCalc24h : VimoCalc24h(countTrans24h>=3)
+   then
+      vimoRiskTrans.addToList("VM-VAS-TOUP-12001: Nạp liên tiếp các giao dịch kể từ lần thứ 3 trong vòng 24h",1);
+end
+
+
+rule "Sum Money GT 3M in 24H by not-aprrove topup"
+ruleflow-group "VAS"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="TOPUP" && droolsCustomerStatus=="NOT_APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+     vimoCalc24h : VimoCalc24h(amount24h>3000000 )
+   then
+      vimoRiskTrans.addToList("VM-VAS-TOUP-12002: Tổng số tiền các giao dịch lớn hơn 3M trong vòng 24h",2);
+end
+
+
+
+
+rule "Recharge sequence from 3th in 24H by not-aprrove buy-card IPT"
+salience 10
+ruleflow-group "VAS"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="BUYCARD" && droolsCustomerStatus=="NOT_APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+     vimoCalc24h : VimoCalc24h(countTrans24h>=3)
+   then
+      vimoRiskTrans.addToList("VM-VAS-CARD-12001: Nạp liên tiếp các giao dịch kể từ lần thứ 3 trong vòng 24h",1);
+end
+
+
+rule "Sum Money GT 1M in 24H by not-aprrove code"
+ruleflow-group "VAS"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="BUYCARD" && droolsCustomerStatus=="NOT_APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+     vimoCalc24h : VimoCalc24h(amount24h>1000000 )
+   then
+      vimoRiskTrans.addToList("VM-VAS-CARD-12002: Tổng số tiền các giao dịch lớn hơn 1M trong vòng 24h",2);
+end
+
+
+
+rule "Recharge sequence from 2th in 24H by not-aprrove loan IPT"
+salience 10
+ruleflow-group "VAS"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="LOAN" && droolsCustomerStatus=="NOT_APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+     vimoCalc24h : VimoCalc24h(countTrans24h>=2)
+   then
+      vimoRiskTrans.addToList("VM-VAS-BILLING-12001: Nạp liên tiếp các giao dịch kể từ lần thứ 2 trong vòng 24h",1);
+end
+
+
+rule "Sum Money GT 5M in 24H by not-aprrove loans"
+ruleflow-group "VAS"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="LOAN" && droolsCustomerStatus=="NOT_APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+     vimoCalc24h : VimoCalc24h(amount24h>5000000 )
+   then
+      vimoRiskTrans.addToList("VM-VAS-BILLING-12002: Tổng số tiền các giao dịch lớn hơn 5M trong vòng 24h",2);
+end

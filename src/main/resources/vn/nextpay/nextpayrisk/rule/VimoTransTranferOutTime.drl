@@ -1,0 +1,102 @@
+package vn.nextpay.nextpayrisk.rule;
+
+import vn.nextpay.nrmrisk.dao.entity.VimoCalc24h;
+import vn.nextpay.nrmrisk.dao.entity.VimoCalc;
+import vn.nextpay.nrmrisk.dao.entity.VimoRiskTrans;
+
+import java.time.LocalDateTime;
+
+
+
+//out time++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+rule "outtime approve transfer out-wallet amount beyond 5M"
+salience 10
+ruleflow-group "TRANSFER"
+lock-on-active
+    when
+         trans :VimoRiskTrans(droolMethod == "OUT_WALLET" && ( transLocalDateTime.getHour() >=22 || transLocalDateTime.getHour() <=7 ) && droolsCustomerStatus == "APPROVE" && amount > 5000000);
+    then
+        trans.addToList("VM-TRANSFER-OUT-21001: Số tiền giao dịch không được vượt quá 5M.",1);
+    end
+
+rule "outtime approve transfer out-wallet tranfer 2 time in 24h"
+ruleflow-group "TRANSFER"
+lock-on-active
+    when
+        VimoCalc24h(countTrans24h >= 2);
+         trans :VimoRiskTrans(droolMethod == "OUT_WALLET" && ( transLocalDateTime.getHour() >=22 || transLocalDateTime.getHour() <=7 ) && droolsCustomerStatus == "APPROVE");
+    then
+        trans.addToList("VM-TRANSFER-OUT-21002: Số lần giao dịch liên tiếp kể từ lần thứ 2 tròng vòng 24h.",2);
+    end
+
+
+
+
+rule "outtime approve transfer in-wallet amount beyond 5M"
+salience 10
+ruleflow-group "TRANSFER"
+lock-on-active
+    when
+         trans :VimoRiskTrans(droolMethod == "IN_WALLET" && ( transLocalDateTime.getHour() >=22 || transLocalDateTime.getHour() <=7 ) && droolsCustomerStatus == "APPROVE" && amount > 5000000);
+    then
+        trans.addToList("VM-TRANSFER-IN-21001: Số tiền giao dịch không được vượt quá 5M.",1);
+    end
+
+
+rule "outtime approve transfer in-wallet tranfer 2 time in 24h"
+ruleflow-group "TRANSFER"
+lock-on-active
+    when
+        VimoCalc24h(countTrans24h >= 2);
+         trans :VimoRiskTrans(droolMethod == "IN_WALLET" && ( transLocalDateTime.getHour() >=22 || transLocalDateTime.getHour() <=7 ) && droolsCustomerStatus == "APPROVE");
+    then
+        trans.addToList("VM-TRANSFER-IN-21002: Số lần giao dịch liên tiếp kể từ lần thứ 2 tròng vòng 24h.",2);
+    end
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+rule "outtime not approve transfer out-wallet amount beyond 500k"
+salience 10
+ruleflow-group "TRANSFER"
+lock-on-active
+    when
+         trans :VimoRiskTrans(droolMethod == "OUT_WALLET" && ( transLocalDateTime.getHour() >=22 || transLocalDateTime.getHour() <=7 ) && droolsCustomerStatus == "NOT_APPROVE" && amount > 500000);
+    then
+        trans.addToList("VM-TRANSFER-OUT-22001: Số tiền giao dịch không được vượt quá 500k.",1);
+    end
+
+rule "outtime not approve transfer out-wallet tranfer 2 time in 24h"
+ruleflow-group "TRANSFER"
+lock-on-active
+    when
+        VimoCalc24h(countTrans24h >= 2);
+         trans :VimoRiskTrans(droolMethod == "OUT_WALLET" && ( transLocalDateTime.getHour() >=22 || transLocalDateTime.getHour() <=7 ) && droolsCustomerStatus == "NOT_APPROVE");
+    then
+        trans.addToList("VM-TRANSFER-OUT-22002: Số lần giao dịch liên tiếp kể từ lần thứ 2 tròng vòng 24h.",2);
+    end
+
+
+
+
+rule "outtime not approve transfer in-wallet amount beyond 500k"
+salience 10
+ruleflow-group "TRANSFER"
+lock-on-active 
+    when
+         trans :VimoRiskTrans(droolMethod == "IN_WALLET" && ( transLocalDateTime.getHour() >=22 || transLocalDateTime.getHour() <=7 ) && droolsCustomerStatus == "NOT_APPROVE" && amount > 500000);
+    then
+        trans.addToList("VM-TRANSFER-IN-22001: Số tiền giao dịch không được vượt quá 500k.",1);
+    end
+
+
+rule "outtime not approve transfer in-wallet tranfer 2 time in 24h"
+ruleflow-group "TRANSFER"
+lock-on-active
+    when
+        VimoCalc24h(countTrans24h >= 2);
+         trans :VimoRiskTrans(droolMethod == "IN_WALLET" && ( transLocalDateTime.getHour() >=22 || transLocalDateTime.getHour() <=7 ) && droolsCustomerStatus == "NOT_APPROVE");
+    then
+        trans.addToList("VM-TRANSFER-IN-22002: Số lần giao dịch liên tiếp kể từ lần thứ 2 tròng vòng 24h.",2);
+    end
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

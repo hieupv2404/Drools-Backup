@@ -1,0 +1,144 @@
+package vn.nextpay.nextpayrisk.rule;
+
+
+import vn.nextpay.nrmrisk.dao.entity.VimoCalc24h;
+import vn.nextpay.nrmrisk.dao.entity.VimoCalc;
+import vn.nextpay.nrmrisk.dao.entity.VimoRiskTrans;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+
+
+
+rule "Sum Money GT 50M in 24H by aprrove offl IPT"
+salience 10
+ruleflow-group "DEPOSIT"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="DEPOSIT_OFFL" && droolsCustomerStatus=="APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+     vimoCalc24h : VimoCalc24h(amount24h>50000000 )
+   then
+      vimoRiskTrans.addToList("VM-DEPOSIT-OFF-11001: Tổng số tiền các giao dịch lớn hơn 50M trong vòng 24h",1);
+end
+
+rule "Sum Money GT 10M in 24H by aprrove onl IPT"
+salience 10
+ruleflow-group "DEPOSIT"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="DEPOSIT_ONL" && droolsCustomerStatus=="APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+     vimoCalc24h : VimoCalc24h(amount24h>10000000 )
+   then
+      vimoRiskTrans.addToList("VM-DEPOSIT-ON-11001: Tổng số tiền các giao dịch lớn hơn 10M trong vòng 24h",1);
+end
+
+rule "Recharge seq from 4th in 24h by aprrove offl"
+ruleflow-group "DEPOSIT"
+lock-on-active
+    when
+    vimoRiskTrans: VimoRiskTrans(droolMethod=="DEPOSIT_OFFL"  && droolsCustomerStatus=="APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+      vimoCalc24h : VimoCalc24h(countTrans24h >= 4)
+    then
+        vimoRiskTrans.addToList("VM-DEPOSIT-OFF-11002: Nạp liên tiếp các giao dịch kể từ lần thứ 4 trong vòng 24h",2);
+end
+
+rule "Recharge GT 5M in 3m by aprrove offl"
+ruleflow-group "DEPOSIT"
+lock-on-active
+    when
+    vimoRiskTrans: VimoRiskTrans(droolMethod=="DEPOSIT_OFFL" && amount > 5000000  && droolsCustomerStatus=="APPROVE" 
+    && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21 && lastTransLocalDateTime.isBefore(transLocalDateTime.minus(3, ChronoUnit.MONTHS)))
+
+    then
+        vimoRiskTrans.addToList("VM-DEPOSIT-OFF-11003: Giá Trị giao dịch lớn hơn 5M phát sinh lần đầu tiên trong vòng 3 tháng",2);
+end
+
+rule "Recharge seq from 3rd in 24h by aprrove onl"
+ruleflow-group "DEPOSIT"
+lock-on-active
+    when
+    vimoRiskTrans: VimoRiskTrans(droolMethod=="DEPOSIT_ONL"  && droolsCustomerStatus=="APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+      vimoCalc24h : VimoCalc24h(countTrans24h >= 3)
+    then
+        vimoRiskTrans.addToList("VM-DEPOSIT-ON-11002: Nạp liên tiếp các giao dịch kể từ lần thứ 3 trong vòng 24h",2);
+end
+
+rule "Recharge GT 5M in 3m by aprrove onl"
+ruleflow-group "DEPOSIT"
+lock-on-active
+    when
+    vimoRiskTrans: VimoRiskTrans(droolMethod=="DEPOSIT_ONL" && amount > 5000000  && droolsCustomerStatus=="APPROVE" 
+    && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21 && lastTransLocalDateTime.isBefore(transLocalDateTime.minus(3, ChronoUnit.MONTHS)))
+
+    then
+        vimoRiskTrans.addToList("VM-DEPOSIT-ON-11003: Giá Trị giao dịch lớn hơn 5M phát sinh lần đầu tiên trong vòng 3 tháng",2);
+end
+
+
+
+
+
+rule "Money GT 1M by not-aprrove offl IPT"
+salience 10
+ruleflow-group "DEPOSIT"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="DEPOSIT_OFFL" && droolsCustomerStatus=="NOT_APPROVE" && amount > 1000000 && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+ 
+   then
+      vimoRiskTrans.addToList("VM-DEPOSIT-OFF-12001: Số tiền các giao dịch lớn hơn 1M",1);
+end
+
+rule "Sum Money GT 5M in 24H by not-aprrove onl IPT"
+salience 10
+ruleflow-group "DEPOSIT"
+lock-on-active
+   when
+     vimoRiskTrans: VimoRiskTrans(droolMethod=="DEPOSIT_ONL" && droolsCustomerStatus=="NOT_APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+     vimoCalc24h : VimoCalc24h(amount24h>5000000 )
+   then
+      vimoRiskTrans.addToList("VM-DEPOSIT-ON-12001: Tổng số tiền các giao dịch lớn hơn 5M trong vòng 24h",1);
+end
+
+rule "Recharge seq from 2nd in 24h by not-aprrove offl"
+ruleflow-group "DEPOSIT"
+lock-on-active
+when
+    vimoRiskTrans: VimoRiskTrans(droolMethod=="DEPOSIT_OFFL"  && droolsCustomerStatus=="NOT_APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+      vimoCalc24h : VimoCalc24h(countTrans24h >= 2)
+    then
+        vimoRiskTrans.addToList("VM-DEPOSIT-OFF-12002: Nạp liên tiếp các giao dịch kể từ lần thứ 2 trong vòng 24h",2);
+end
+
+rule "Recharge In 500 to 1M must approve by not-aprrove offl"
+ruleflow-group "DEPOSIT"
+lock-on-active
+    when
+    vimoRiskTrans: VimoRiskTrans(droolMethod=="DEPOSIT_OFFL" && amount > 500000 && amount < 1000000  && droolsCustomerStatus=="NOT_APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+    
+    then
+        vimoRiskTrans.addToList("VM-DEPOSIT-OFF-12003: Giá Trị giao dịch trong khoảng 500-1M phải chứng thực",2);
+end
+
+rule "Recharge seq from 3rd in 24h by not-aprrove onl"
+ruleflow-group "DEPOSIT"
+lock-on-active
+    when
+    vimoRiskTrans: VimoRiskTrans(droolMethod=="DEPOSIT_ONL"  && droolsCustomerStatus=="NOT_APPROVE" && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21)
+      vimoCalc24h : VimoCalc24h(countTrans24h >= 3)
+    then
+        vimoRiskTrans.addToList("VM-DEPOSIT-ON-12002: Nạp liên tiếp các giao dịch kể từ lần thứ 3 trong vòng 24h",2);
+end
+
+rule "Recharge GT 1M in 3m by not-aprrove onl"
+ruleflow-group "DEPOSIT"
+lock-on-active
+    when
+    vimoRiskTrans: VimoRiskTrans(droolMethod=="DEPOSIT_ONL" && amount > 1000000  && droolsCustomerStatus=="NOT_APPROVE" 
+    && transLocalDateTime.getHour() >=8 && transLocalDateTime.getHour() <=21 && lastTransLocalDateTime.isBefore(transLocalDateTime.minus(3, ChronoUnit.MONTHS)))
+
+    then
+        vimoRiskTrans.addToList("VM-DEPOSIT-ON-12003: Giá Trị giao dịch lớn hơn 1M phát sinh lần đầu tiên trong vòng 3 tháng",2);
+end
+
+

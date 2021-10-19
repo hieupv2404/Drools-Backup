@@ -1,0 +1,10 @@
+package vn.nextpay.nextpayrisk.rule;
+
+import vn.nextpay.nrmrisk.dao.entity.versionCheck;
+
+rule "check version rule"
+when
+    V: versionCheck()
+then
+    V.setVersion("Version: 1.2.5-FINAL");
+end
